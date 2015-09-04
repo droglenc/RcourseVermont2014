@@ -1,0 +1,76 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Nonlinear Models}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+library(nlstools)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"hold","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Nonlinear Models}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item Load the data in the \dfile{LakeTroutALTER.csv} file into a data frame in R.
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/Exercises")
+lkt <- read.csv("Data/LakeTroutALTER.csv")
+str(lkt)
+@
+  \item Compute point estimates for the three parameters of a ``traditional'' von Bertalanffy growth model.
+<<echo=makekey, results=makekeyres>>=
+svb1 <- vbStarts(tl~age,data=lkt,type="typical")
+fit1 <- nls(tl~Linf*(1-exp(-K*(age-t0))),data=lkt,start=svb1)
+( cf <- coef(fit1) )
+@
+  \item Compute confidence intervals, using both the profile-likelihood and bootstrap methods, for $L_{\infty}$ and $K$.  Comment on the difference in intervals between the two methods.
+<<echo=makekey, results=makekeyres, warning=makekey, message=makekey>>=
+confint(fit1)                      # profile LH method
+boot1 <- nlsBoot(fit1,niter=200)   # bootstrap method
+confint(boot1)
+@  
+  \item Construct a plot of length versus age with the best-fit von Bertalanffy growth model superimposed.
+<<NLSFit1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+plot(tl~age,data=lkt,xlab="Age",ylab="Total Length (mm)",pch=16,col=rgb(0,0,0,1/2))
+curve(cf["Linf"]*(1-exp(-cf["K"]*(x-cf["t0"]))),
+      from=3,to=50,n=500,lwd=2,col="red",add=TRUE)
+@
+
+  \item Predict the length, with 95\% confidence interval, of an age-20 lake trout.
+<<echo=makekey, results=makekeyres>>=
+age0 <- 20
+predict(fit1, data.frame(age=age0))
+ests1 <- boot1$coefboot
+pv <- ests1[,"Linf"]*(1-exp(-ests1[,"K"]*(age0-ests1[,"t0"])))
+quantile(pv,c(0.025,0.975))
+@  
+  \item \textit{If time permits ...} repeat the analysis above but using the Gallucci and Quinn parameterization of the VBGM.
+<<echo=makekey, results=makekeyres, fig.show=makekeyfig, warning=makekey, message=makekey>>=
+svb2 <- vbStarts(tl~age,data=lkt,type="GallucciQuinn")
+fit2 <- nls(tl~omega/K*(1-exp(-K*(age-t0))),data=lkt,start=svb2)
+( cf <- coef(fit2) )
+confint(fit2)                      # profile LH method
+boot2 <- nlsBoot(fit2,niter=200)   # bootstrap method
+confint(boot2)
+plot(tl~age,data=lkt,xlab="Age",ylab="Total Length (mm)",pch=16,col=rgb(0,0,0,1/2))
+curve(cf["omega"]/cf["K"]*(1-exp(-cf["K"]*(x-cf["t0"]))),
+      from=3,to=50,n=500,lwd=2,col="red",add=TRUE)
+age0 <- 20
+predict(fit2, data.frame(age=age0))
+ests2 <- boot2$coefboot
+pv <- ests2[,"omega"]/ests2[,"K"]*(1-exp(-ests2[,"K"]*(age0-ests2[,"t0"])))
+quantile(pv,c(0.025,0.975))
+@  
+
+\end{enumerate}
+
+\end{document}

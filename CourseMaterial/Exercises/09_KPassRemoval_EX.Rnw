@@ -1,0 +1,55 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - K-Pass Removal}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+library(nlstools)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"hold","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\ifmakekey
+\vspace{-12pt}
+\fi
+\section*{Exercise -- K-Pass Removal}
+\ifmakekey
+\vspace{-12pt}
+\fi
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item In one reach of the Little Stawamus Creek (British Columbia), Decker \textit{et al.} (1999) had the following removals of Coho Salmon (\textit{Oncorhynchus kisutch}) in three passes -- 107, 62, and 17.  Use this information to estimate the initial population size (with the Carle-Strub method) as well as the probability of capture (with appropriate 95\% confidence intervals).
+<<echo=makekey, results=makekeyres>>=
+d <- c(107,62,17)
+res <- removal(d,type="CarleStrub")
+summary(res)
+confint(res)
+@
+\ifmakekey
+The initial population is estimated to be between \Sexpr{formatC(confint(res)["No","95% LCI"],format="f",digits=0)} and \Sexpr{formatC(confint(res)["No","95% UCI"],format="f",digits=0)}.  The probability of capture is between \Sexpr{formatC(confint(res)["p","95% LCI"],format="f",digits=3)} and \Sexpr{formatC(confint(res)["p","95% UCI"],format="f",digits=3)}.
+\fi
+  \item Schnute (1983) recorded the number of Brook Trout (\textit{Salvelinus fontinalis}) removed in passes in two streams in the the Nashwaak Experimental Watersheds Project (Canada) on multiple dates.  The data are recorded in \dfile{BrookTroutNEWP.csv}.  Use this information to estimate the initial population size (with the Zippin method) and probability of capture (with appropriate 95\% confidence intervals) for each stream, section, and date combination. 
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/Exercises/")
+d <- read.csv("Data/BrookTroutNEWP.csv",header=TRUE)
+res <- apply(d[,4:7],MARGIN=1,FUN=removal,just.ests=TRUE,type="Zippin")
+res <- data.frame(t(res))
+res <- cbind(d[,1:3],res)
+res <- within(res,{
+  No.LCI <- No-1.96*No.se
+  No.UCI <- No+1.96*No.se  
+})
+res
+
+@
+\end{enumerate}
+
+\end{document}

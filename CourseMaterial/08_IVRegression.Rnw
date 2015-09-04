@@ -1,0 +1,94 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont 14 - Indicator Variable Regression}
+
+\begin{document}
+  \titleRHO{Indicator Variable Regression}{Vermont CFWRU Workshop}{Mar}
+
+<<setup, echo=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+fn <- "08_IVRegression"
+@
+
+\section*{Preliminaries}
+<<results='hide', message=FALSE, warning=FALSE>>=
+library(FSA)      # for Subset(), fitPlot()
+@
+
+\section*{Lake Trout Data}
+Curtis (1990) examined the population dynamics related to the recovery of an offshore lake trout population near Stannard Rock, Lake Superior.  Relative abundance of lake trout greater than 43.2 cm long was recorded as the CPE (fish caught per 50,000 m of 114.3-mm-mesh gill net) of each age group in each year.
+
+\begin{center}
+  \begin{tabular}{c|ccccccccc}
+\hline\hline
+\widen{-2}{7}{} & \multicolumn{9}{c}{Age-Group} \\
+\cline{2-10}
+\widen{-2}{7}{Year} & VI & VII & VIII & IX & X & XI & XII & XIII & XIV \\
+\hline
+\widen{0}{5}{1959} & 64 & 219 & 241 & 121 & 33 & 9 & 1 & 0.5 & 1 \\
+\widen{0}{5}{1963} & 129 & 339 & 331 & 192 & 70 & 16 & 0.5 & 0.5 & 0.5 \\
+\widen{0}{0}{1964} & 149 & 524 & 515 & 201 & 63 & 18 & 2 & 0.5 & 0.5 \\
+\widen{0}{0}{1965} & 75 & 379 & 501 & 328 & 133 & 39 & 11 & 1 & 0.5 \\
+\widen{0}{0}{1966} & 149 & 488 & 459 & 172 & 64 & 22 & 5 & 0.5 & 0.5 \\
+\widen{0}{0}{1967} & 63 & 368 & 287 & 130 & 55 & 19 & 6 & 0.5 & 0.5 \\
+\widen{0}{0}{1968} & 50 & 215 & 259 & 141 & 55 & 18 & 5 & 1 & 0.5 \\
+\widen{0}{0}{1969} & 45 & 150 & 153 & 76 & 23 & 6 & 0.5 & 0.5 & 0.5 \\
+\widen{0}{5}{1973} & 101 & 759 & 1268 & 1116 & 491 & 141 & 40 & 4 & 0.5 \\
+\widen{0}{0}{1974} & 151 & 733 & 1114 & 1092 & 571 & 163 & 50 & 9 & 5 \\
+\widen{0}{0}{1975} & 109 & 901 & 1517 & 1606 & 1076 & 342 & 117 & 12 & 7 \\
+\widen{0}{0}{1976} & 53 & 604 & 1204 & 1560 & 1146 & 396 & 156 & 18 & 10 \\
+\widen{0}{0}{1977} & 157 & 867 & 1343 & 1410 & 1031 & 417 & 192 & 17 & 7 \\
+\widen{0}{0}{1978} & 89 & 735 & 1307 & 1623 & 1150 & 445 & 198 & 18 & 14 \\
+\widen{-2}{0}{1979} & 29 & 299 & 718 & 1268 & 1195 & 585 & 300 & 36 & 14 \\
+\hline\hline
+  \end{tabular}
+\end{center}
+
+<<>>=
+ages <- 9:12
+yc67 <- c(1560,1031,445,300)
+yc64 <- c(1116,571,342,156)
+yc57 <- c(172,55,18,0.5)
+yc54 <- c(192,63,39,5)
+d <- data.frame(yc=factor(rep(c(1967,1964,1957,1954),each=4)),
+                age=rep(ages,times=4),
+                cpe=c(yc67,yc64,yc57,yc54))
+d <- within(d,logcpe <- log(cpe))
+d
+@
+
+\section*{Model Fitting}
+<<IVRFit1>>=
+# Compare 1957 and 1967 year-classes
+lm1 <- lm(logcpe~age*yc,data=Subset(d,yc %in% c(1957,1967)))
+anova(lm1)
+summary(lm1)
+confint(lm1)
+fitPlot(lm1,legend="bottomleft")
+@
+
+\vspace{12pt}
+<<IVRFit2>>=
+# Compare 1964 and 1967 year-classes
+lm2 <- lm(logcpe~age*yc,data=Subset(d,yc %in% c(1964,1967)))
+anova(lm2)
+summary(lm2)
+confint(lm2)
+fitPlot(lm2,legend="bottomleft")
+@
+
+\vspace{12pt}
+<<>>=
+# Fit without the insignificant interaction term as a demonstration
+lm2a <- lm(logcpe~age+yc,data=Subset(d,yc %in% c(1964,1967)))
+anova(lm2a)
+summary(lm2a)
+confint(lm2a)
+@
+
+<<echo=FALSE, results='hide', message=FALSE, error=FALSE>>=
+swvCode(fn,out.dir="Scripts",moreItems=c("source","fn"))
+@
+
+\end{document}

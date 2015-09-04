@@ -1,0 +1,51 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont 14 - K-Pass Removal}
+
+\begin{document}
+  \titleRHO{K-Pass Removal}{Vermont CFWRU Workshop}{Mar}
+
+<<setup, echo=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+fn <- "09_KPassRemoval"
+@
+
+\section*{Preliminaries}
+<<results='hide', message=FALSE, warning=FALSE>>=
+library(FSA)      # for removal()
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/") # Derek's Computer
+@
+
+\section*{Single Removal Estimates}
+<<>>=
+d <- c(71,48,40)
+res <- removal(d,type="CarleStrub")
+summary(res)
+confint(res)
+@
+
+\clearpage
+\section*{Multiple Removal Estimates -- Data in Wide Format}
+<<>>=
+d <- read.csv("Data/JonesStockwell2.csv",header=TRUE)
+head(d)
+@
+
+<<>>=
+( res <- apply(d[,4:6],MARGIN=1,FUN=removal,type="CarleStrub",just.ests=TRUE) )
+# transpose the result and make as a data.frame, add specific info from d, add CIs
+res <- data.frame(t(res))
+res <- cbind(d[,1:3],res)
+res <- within(res,{
+  No.LCI <- No-1.96*No.se
+  No.UCI <- No+1.96*No.se  
+})
+head(res)                 # first 6 rows
+@
+
+<<echo=FALSE, results='hide', message=FALSE, error=FALSE>>=
+swvCode(fn,out.dir="Scripts",moreItems=c("source","fn"))
+@
+
+\end{document}

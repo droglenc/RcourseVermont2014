@@ -1,0 +1,81 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Basics}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"asis","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Basics \& Terminology}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item Load the \R{FSA} library (\textit{even though it is not required for this exercise}).
+<<echo=makekey, results=makekeyres, eval=FALSE>>=
+library(FSA)
+@
+  \item Use an expression to compute the CPE (number of fish per net) if three nets captured 87 fish.
+<<echo=makekey, results=makekeyres>>=
+87/3
+@
+  \item Assign (and view) the result of an expression that calculates the CPE (number of fish per 300 m of gillnet per night) if 1400 m of gillnet fished for two nights captured 87 fish.
+<<echo=makekey, results=makekeyres>>=
+( res <- 87/1400/2*300 )
+@
+  \item Create an expression that uses the result saved in the previous step to modify the CPE to be per 1000 m of gillnet per night (i.e., don't re-create the previous expression, simply modify by starting with the saved result.)
+<<echo=makekey, results=makekeyres>>=
+res*1000/300
+@
+  \item Enter the following observed catches into a vector called \R{ct} -- 87, 54, 12, 98, 45, 5, 78.
+<<echo=makekey, results=makekeyres>>=
+ct <- c(87,54,12,98,45,5,78) 
+@
+  \item Enter the following efforts (number of nets) into a vector called \R{ft} -- 3, 3, 2, 5, 2, 2, 4.
+<<echo=makekey, results=makekeyres>>=
+ft <- c(3,3,2,5,2,2,4)
+@
+  \item Compute a vector called \R{cpe} that contains the CPE (number of fish per net) computed from the previously entered catch and effort data.
+<<echo=makekey, results=makekeyres>>=
+( cpe <- ct/ft )
+@
+  \item Find the mean CPE.
+<<echo=makekey, results=makekeyres>>=
+mean(cpe)
+@
+  \item Use R code to find the third CPE.
+<<echo=makekey, results=makekeyres>>=
+cpe[3]
+@
+  \item Use R code to simultaneously find the third and fifth CPEs.
+<<echo=makekey, results=makekeyres>>=
+cpe[c(3,5)]
+@
+  \item Use R code to eliminate the seventh CPE (but retain the other six CPEs).
+<<echo=makekey, results=makekeyres>>=
+cpe[-7]
+@
+  \item Use R code to find the CPEs for ONLY the days when two nets were fished.
+<<echo=makekey, results=makekeyres>>=
+cpe[ft==2]
+@
+  \item Find the mean CPE for ONLY those days when three or more nets were fished.
+<<echo=makekey, results=makekeyres>>=
+cpe.gt3 <- cpe[ft>=3]
+mean(cpe.gt3)
+@
+  \item Save your R script, close RStudio, open RStudio, and re-run your script.
+\ifmakekey
+There is nothing to show here.  The point of this question is to demonstrate how you can completely re-create analyses by re-running your script.
+\fi
+\end{enumerate}
+
+\end{document}

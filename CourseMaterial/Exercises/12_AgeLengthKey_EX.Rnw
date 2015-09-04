@@ -1,0 +1,127 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Age-Length Key}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"hold","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Age-Length Key}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+
+\begin{enumerate}
+  \newcounter{saveenum}
+  \item Wolfert (1980) examined the population of Rock Bass (\emph{Ambloplites rupestris}) from Eastern Lake Ontario in the late 1970s.  In his studies, he measured the total length of 1288 Rock Bass.  Scales were removed for age assignment from as many as 10 fish from each 10-mm length interval.  The lengths and ages (if they existed) from all 1288 fish are recorded in \dfile{RockBassLO2.csv} [Note: the filename contains an ``oh'' not a ``zero''.].  Load these data into R.
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/Courses/Vermont2014/CourseMaterial/Exercises/")
+rb <- read.csv("Data/RockBassLO2.csv",header=TRUE)
+@
+  \item Separate the observed data into age- and length-samples.  How many fish are in the age-sample?  How many fish are in the length-sample?
+<<echo=makekey, results=makekeyres>>=
+rb.len <- Subset(rb,is.na(age))
+rb.age <- Subset(rb,!is.na(age))
+@
+\ifmakekey
+There are \Sexpr{nrow(rb.age)} fish in the age-sample and \Sexpr{nrow(rb.len)} fish in the length-sample.
+\fi   
+  
+  \item Add a variable containing the 10-mm length categories to the age-sample (save as a new data frame).  Then construct a table of the \textbf{number} (not proportion) of fish in each age and 10-mm TL category in the age sample.  From these results, compute each of the following \emph{BY HAND} (i.e., not using R). 
+<<echo=makekey, results=makekeyres>>=
+rb.age <- lencat(~tl,data=rb.age,startcat=110,w=10)
+( tbl <- xtabs(~LCat+age,data=rb.age) )
+@  
+  \begin{enumerate}
+    \item How many fish in the age-sample are in the 180-mm length category?
+\ifmakekey
+\\ There are \Sexpr{sum(tbl["180",])} fish in the 180-mm TL category.
+\fi
+    \item How many age-7 fish are in the age-sample?
+\ifmakekey
+\\ There are \Sexpr{sum(tbl[,"7"])} age-7 fish.
+\fi
+    \item What proportion of Rock Bass in the 140-mm length category are age-4?
+\ifmakekey
+\\ The proportion of 140-mm TL Rock Bass that are age-4 is $\frac{\Sexpr{tbl["140","4"]}}{\Sexpr{sum(tbl["140",])}}$=\Sexpr{formatC(tbl["140","4"]/sum(tbl["140",]),format="f",digits=2)}.
+\fi
+    \item What proportion of Rock Bass in the 200-mm length category are age-8?
+\ifmakekey
+\\ The proportion of 200-mm TL Rock Bass that are age-8 is $\frac{\Sexpr{tbl["200","8"]}}{\Sexpr{sum(tbl["200",])}}$=\Sexpr{formatC(tbl["200","8"]/sum(tbl["200",]),format="f",digits=2)}.
+\fi 
+  \end{enumerate}
+  
+  \item Construct an age-length key from the table above (using R).  From these results answer the following questions.
+<<echo=makekey, results=makekeyres>>=
+( ak <- prop.table(tbl,margin=1) )
+@
+  \begin{enumerate}
+    \item What proportion of Rock Bass in the 210-mm length category should be assigned an age of 5?
+\ifmakekey
+\\ The proportion of 210-mm Rock Bass that should be assigned an age of five is \Sexpr{ak["210","5"]}.
+\fi
+    \item How many of thirty Rock Bass in the 180-mm length category should be assigned an age of 5?  
+\ifmakekey
+\\ The proportion of 180-mm Rock Bass that should be assigned an age of five is \Sexpr{ak["180","5"]}.  Thus, 30$*$\Sexpr{ak["180","5"]} = \Sexpr{30*ak["180","5"]} fish should be assigned an age of five.
+\fi
+  \end{enumerate}
+
+  \item Use the semi-random age assignment technique from Isermann and Knight (2005) to assign ages to the un-aged fish in the length-sample (save as a new data frame).  Combine the age-sample and the age-assigned length-sample into a single data frame.  Add a variable containing the 10-mm length categories to the combined data frame.  Use the combined data frame to answer the following questions.
+<<echo=makekey, results=makekeyres>>=
+rb.len.mod <- ageKey(ak,age~tl,data=rb.len)
+rb.len.mod <- lencat(~tl,data=rb.len.mod,startcat=110,w=10)
+rb.comb <- rbind(rb.age,rb.len.mod)
+@
+  \begin{enumerate}
+    \item How many fish are estimated to be age-5?  [Hint: use \R{xtabs()} or \R{Summarize()}.]
+<<echo=makekey, results=makekeyres>>=
+( af <- xtabs(~age,data=rb.comb) )
+@
+\ifmakekey
+There were \Sexpr{af["5"]} fish estimated to be age-5.
+\fi
+    \item How many fish are estimated to be age-11?
+\ifmakekey
+\\ There were \Sexpr{af["11"]} fish estimated to be age-11.
+\fi
+    \item Plot the age distribution for all fish.
+<<AKHist1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+hist(~age,data=rb.comb,breaks=3:11,xlab="Age (yrs)",col="gray90")
+@
+    \item How many fish are in the 150-mm length interval? [Hint: use \R{xtabs()}.]
+<<echo=makekey, results=makekeyres>>=
+( lf <- xtabs(~LCat,data=rb.comb) )
+@
+\ifmakekey
+There were \Sexpr{lf["150"]} fish in the 150-mm TL interval.
+\fi
+    \item What is the mean length of age-5 fish?
+<<echo=makekey, results=makekeyres, warning=makekey>>=
+( sl <- Summarize(tl~age,data=rb.comb,digits=1))
+@
+\ifmakekey
+The mean length for age-5 fish is \Sexpr{sl[sl$age==5,"mean"]} mm.
+\fi
+    \item Plot the length-at-age with the mean length-at-age superimposed for all fish.
+<<AKMeanL, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+plot(tl~age,data=rb.comb,ylab="Total Length (mm)",xlab="Age",pch=16,col=rgb(0,0,0,0.05))
+lines(mean~fact2num(age),data=sl,col="blue",lwd=2)
+@
+\ifmakekey
+\fi
+    \item Did your ``neighbor'' get the \emph{exact} same results in their analysis? Why or why not?  If not, how different were they?
+\ifmakekey
+\\The results are not exactly the same (this is easier to see in the age distribution table, rather than the plot) due to the randomization involved in handling \emph{fractionation}.  They likely did not differ much.
+\fi
+  \end{enumerate}
+\end{enumerate}  
+
+\end{document}

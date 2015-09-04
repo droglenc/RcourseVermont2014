@@ -1,0 +1,35 @@
+
+library(FSA)      # for Subset(), view(), Summarize(), lencat(), ageKey(), fact2num()
+library(plotrix)  # for histStack()
+
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/") # Derek's Computer
+d <- read.csv("Data/SpotVA2.csv",header=TRUE)
+str(d)
+view(d)
+
+sp.len <- Subset(d,is.na(age))
+str(sp.len)
+sp.age <- Subset(d,!is.na(age))
+str(sp.age)
+
+Summarize(~tl,data=sp.age,digits=1)
+sp.age.mod <- lencat(~tl,data=sp.age,startcat=6,w=1)
+view(sp.age.mod)
+( AL.raw <- xtabs(~LCat+age,data=sp.age.mod) )
+( AL.key <- prop.table(AL.raw,margin=1) )
+
+sp.len.mod <- ageKey(AL.key,age~tl,data=sp.len)
+view(sp.len.mod)
+sp.comb <- rbind(sp.age,sp.len.mod)
+str(sp.comb)
+
+agefreq <- xtabs(~age,data=sp.comb)
+round(prop.table(agefreq)*100,1)
+
+( sp.sum <- Summarize(tl~age,data=sp.comb,digits=2) )
+hist(~age,data=sp.comb,breaks=0:5,xlab="Age (yrs)")
+plot(tl~age,data=sp.comb,ylab="Total Length (mm)",xlab="Age",pch=16,col=rgb(0,0,0,1/10))
+lines(mean~fact2num(age),data=sp.sum,col="blue",lwd=2)
+histStack(tl~age,data=sp.comb,xlab="Total Length",ylim=c(0,100),
+          col="gray.colors",legend="topright")
+

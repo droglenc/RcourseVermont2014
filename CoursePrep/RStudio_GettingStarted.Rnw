@@ -1,0 +1,55 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\hypersetup{pdftitle = R Workshop RStudio Getting Started}
+\input{c:/aaaWork/zGnrlLatex/JustRPreamble}
+\setcounter{secnumdepth}{0}  % have unnumbered sections appear in TOC
+
+\begin{document}
+<<just_latex, echo=FALSE, cache=FALSE, results='hide'>>=
+@
+
+\section{What is RStudio}
+\vspace{-12pt}
+R is an open-source software environment for statistical computing and graphics that runs on Windows, Mac OS, and many UNIX platforms.  Unlike many other programs, users interact with R through the issuance of commands on a command line rather than through a graphical user interface.    While such an interface may be unusual for many users, it's primary strength is the ability for a user to develop scripts of commands to perform various analyses that can then be easily repeated.
+
+RStudio is an open-source integrated development environment (IDE) that serves as a front-end ``on top'' of R that eases the user's interaction with R by providing some of the conveniences of a GUI and, more importantly, a means for efficiently constructing and running R scripts.  Among other conveniences, RStudio provides a four-panel layout that includes a feature-rich source-code editor (includes syntax highlighting, parentheses completion, spell-checking, etc.), a tight link to the R console, a system for examining objects saved in R, an interface to R help, and extended features to examine and save plots.  More information about RStudio can be found at \href{http://www.rstudio.com/ide/docs/}{www.rstudio.com/ide/docs/}.
+
+
+\section{RStudio Design}
+\vspace{-12pt}
+RStudio is organized around a four-panel layout \figrefp{fig:RStudioLayout}.  The upper-left panel is the R \emph{Script Editor}.  R commands will be typed in this panel and submitted to the R \emph{Console} in the lower-left panel.  For most applications, you will be typing R commands in the \emph{Script Editor} and submitting them to the \emph{Console}; you will not be typing commands directly into the \emph{Console}.  The \emph{Script Editor} is a high-level text editor whereas the \emph{Console} is the R program.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=5.9in]{Figs/RStudio_Layout.png}
+    \caption{Example of the RStudio layout with the \emph{Script Editor} in the upper-left panel, \emph{Console} in the lower-left panel, the \emph{environment} tab shown in the upper-right panel, and the \emph{Plot} tab shown in the lower-right panel.}
+  \label{fig:RStudioLayout}
+\end{figure}
+
+The upper-right panel contains two tabs -- \emph{environment} and \emph{History}.  Many items listed under the \emph{environment} tab can be double-clicked to open them for viewing as a tab in the \emph{Script Editor}.  The \emph{History} tab simply shows all of the commands that you have submitted to the \emph{Console}.
+
+The lower-right panel contains four tabs -- \emph{Files}, \emph{Plots}, \emph{Packages}, and \emph{Help}.  The \emph{Plots} tab will show the high-level plots produced by commands submitted to the \emph{Console}.  One can cycle through the history of constructed plots with the arrows on the left side of the plot toolbar and plots can be saved to external files using the ``Export'' tab on the plot toolbar \figrefp{fig:RStudioLayout}.  A list of all installed packaged is seen by selecting the \emph{Packages} tab.  Help for each package can be obtained by clicking on the name of package\footnote{Help can also be obtained by typing a question mark and then the name of the package in the console -- e.g., \R{?FSA}.}.  The help will then appear in the \emph{Help} tab.
+
+\section{Basic Usage}
+Our primary interaction with RStudio will be through developing R scripts in the \emph{Script Editor}, submitting those scripts to the \emph{Console}, and viewing textual or tabular results in the \emph{Console}, and graphical results in the \emph{Plot} panel.  In this section, I briefly introduce how to construct and run R scripts in RStudio.
+
+One opens a blank file for an R script by selecting the ``New'' icon (\includegraphics[scale=0.8]{Figs/RStudio_NewIcon.png}) and then \texttt{R Script}; selecting the \texttt{File} menu, \texttt{New} submenu, and \texttt{R Script} item; or with \verb+<CTRL>+ + \verb+<Shift>+ + \verb+N+.  In the ensuing tab of the \emph{Script Editor}, type the three lines exactly as shown below\footnote{For the moment, don't worry about what these lines ``do.''}.
+
+<<eval=FALSE,tidy=FALSE>>=
+dat <- rnorm(100)    # create random normal data (n=100)
+hist(dat,main="")    # histogram of data without a title
+summary(dat)         # summary statistics
+@
+
+One must now ``submit'' these commands to the \emph{Console} to perform the requested calculations.  These commands can be submitted in a variety of ways:
+
+\begin{itemize}
+  \item Put the cursor on the first line in the \emph{Script Editor} and press the ``run'' icon (\includegraphics[scale=0.8]{Figs/RStudio_RunIcon.png}; altenatively press \verb+<CTRL>+ + \verb+<Enter>+).  This will submit the first line to the \emph{Console} and move the cursor to the second line in the \emph{Script Editor}.  Pressing the ``Run'' icon will now submit the second line.  And so on.
+  \item Select all lines in the \emph{Script Editor} that you wish to submit and then press the ``run'' icon.
+\end{itemize}
+
+The RStudio layout after using the first method is shown in \figref{fig:RStudioLayout}.
+
+The R Script in the \emph{Script Editor} should now be saved by selecting the \texttt{File} menu and the \texttt{Save} item (alternatively, pressing \verb+<CTRL>+ + \verb+S+).  RStudio can now be closed (do NOT save the workspace) and re-opened.  The script can then be re-opened (choose the \texttt{File} menu and the \texttt{Open file ...} submenu if the file is not already in the \emph{Script Editor}) and re-submitted to the \emph{Console} to exactly repeat the analyses\footnote{Note that the results of commands are not saved in R or RStudio; rather the commands are saved and re-submitted to re-perform the analysis.}.
+
+\end{document}

@@ -1,0 +1,116 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Basic Summaries}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+library(plotrix)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"asis","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Basic Summaries}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item Load the data in the \dfile{LakeTroutALTER.csv} file into a data frame in R.
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/Exercises")
+lkt <- read.csv("Data/LakeTroutALTER.csv")
+str(lkt)
+@
+  \vspace{12pt}
+  \item Summarize age in the following ways:
+    \begin{enumerate}  
+      \item Construct age-frequency (number-at-age) and percentage-at-age tables.
+<<echo=makekey, results=makekeyres>>=
+( agetbl <- xtabs(~age,data=lkt) )
+( ageptbl <- round(prop.table(agetbl)*100,1) )
+@
+      \item Construct a bar chart of the percentage-at-age table.
+<<AgeBar1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+barplot(ageptbl,xlab="Age",ylab="Percentage of Fish",ylim=c(0,12))
+@
+      \item Construct an age-percentage table separated by sex (e.g., what percentage of males were age-17?).
+<<echo=makekey, results=makekeyres>>=
+agetbl2 <- xtabs(~sex+age,data=lkt)
+round(prop.table(agetbl2,margin=1)*100,1)
+@
+    \end{enumerate}
+
+  \vspace{12pt}
+  \item Summarize total length in the following ways:
+    \begin{enumerate}
+      \item Compute summary statistics of total length for all fish.
+<<echo=makekey, results=makekeyres>>=
+Summarize(~tl,data=lkt,digits=1)
+@
+      \item Construct a histogram of total length using 50-mm length increments.
+<<TLHist1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+hist(~tl,data=lkt,right=TRUE,breaks=seq(200,600,50),xlab="Total Length (mm)")
+@
+      \item Compute summary statistics of total length separately for each sex.
+<<echo=makekey, results=makekeyres, warning=makekey>>=
+Summarize(tl~sex,data=lkt,digits=1)
+@
+      \item Construct a notched boxplot of total length separately for each sex.
+<<AgeBox1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+boxplot(age~sex,data=lkt,xlab="Sex",ylab="Age (yrs)",col="gray90",notch=TRUE)
+@
+      \item Construct a stacked histogram of total length separately for each sex.
+<<TLHist2, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+histStack(age~sex,data=lkt,xlab="TOtal Lengt (mm)",breaks=seq(200,600,50),
+          ylim=c(0,60),col="gray.colors",legend="topright")
+@
+    \end{enumerate}
+
+  \vspace{12pt}
+  \item Examine the following relationships (graphically and, if appropriate, numerically):
+    \begin{enumerate}
+      \item Between total length and otolith radius.
+<<LOtoPlot1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+plot(otorad~tl,data=lkt,xlab="Total Length (mm)",ylab="Otolith Radius (mm)",pch=16)
+@
+    \end{enumerate}
+  
+  \vspace{12pt}
+  \item If you have time ...
+    \begin{enumerate}
+      \item Construct a plot of total length, with approximate 95\% confidence intervals, by age.
+<<TLLenAtAge, echo=makekey, results=makekeyres, warning=makekey, warning=makekey, fig.show=makekeyfig>>=
+smrzTLAge <- Summarize(tl~age,data=lkt,digits=1)
+smrzTLAge <- within(smrzTLAge, {
+  LCI <- mean-1.96*sd/sqrt(n)
+  UCI <- mean+1.96*sd/sqrt(n)
+})
+with(smrzTLAge,plotCI(fact2num(age),mean,ui=UCI,li=LCI,pch=16,xlab="Age",ylab="Mean TL"))
+@
+      \item Construct a plot between total length and weight.
+<<LWPlot1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+plot(w~tl,data=lkt,xlab="Total Length (mm)",ylab="Weight (g)",pch=16)
+@
+      \item Construct separate histograms of total length for males and females.
+<<TLSexHist1, echo=makekey, results=makekeyres, fig.width=7, fig.height=3.5, out.width='.8\\linewidth', fig.show=makekeyfig>>=
+hist(tl~sex,data=lkt,right=TRUE,breaks=seq(200,600,50),xlab="Total Length (mm)")
+@
+      \item Examine the relationship between age and total length.
+<<TLAgePlot1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+plot(tl~age,data=lkt,xlab="Age",ylab="Total Length (mm)",pch=16)
+@
+      \item Examine the relationship between age and total length with separate symbols for different sexes.
+<<TLAgePlot2, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+pts <- c(16,3)
+plot(tl~age,data=lkt,xlab="Age",ylab="Total Length (mm)",pch=pts[sex])
+legend("bottomright",pch=pts,legend=levels(lkt$sex))
+@
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}

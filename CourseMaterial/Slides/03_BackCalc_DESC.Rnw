@@ -1,0 +1,217 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+% sets the beamer them and color
+\usetheme{Madrid}
+\usecolortheme[named=Brown]{structure}
+% turns off navigation bar
+\beamertemplatenavigationsymbolsempty
+% allows inclusion of graphics and makes equations larger
+\usepackage{graphicx}
+\newcommand*{\Scale}[2][4]{\scalebox{#1}{\ensuremath{#2}}}%
+% uses my custom bibliography style
+\usepackage[authoryear,round]{natbib}
+  \bibliographystyle{c:/aaaWork/zGnrlLatex/afs}
+  \bibpunct{(}{)}{;}{a}{}{,}
+% allows saving and starting a counter across slides
+\newcounter{resEnumi}
+\newcommand{\saveResEnumi}{\setcounter{resEnumi}{\theenumi}}
+\newcommand{\setResEnumi}{\setcounter{enumi}{\theresEnumi}}
+
+<<setup, echo=FALSE, results='hide', message=FALSE, warning=FALSE>>=
+#### Some startup R stuff
+
+## load knitr setup specific for beamer
+source("C:/aaaWork/zGnrlLatex/knitr_beamer_setup.R")
+## set more global defaults
+opts_chunk$set(cache=TRUE)
+
+## load packages needed below
+library(FSA)
+library(xtable)
+library(plotrix)
+
+## load data
+data(SMBassWB)
+SMBassWB$yearclass <- SMBassWB$yearcap-SMBassWB$agecap
+## restrict to 1990 capture year for most analyses
+wb90 <- Subset(SMBassWB,yearcap==1990)
+@
+
+
+
+%###############################################################################
+%###############################################################################
+% Start the document.
+\begin{document}
+
+% Make a title slide
+\title[Back-Calculation]{Back-Calculation of Previous Length}
+\author{Dr. Derek H. Ogle}
+\institute[Northland College]{\normalsize Northland College\\[2\baselineskip]}
+\date[Vermont 2014]{Vermont R Workshop\\ Burtlington VT\\ 5-7 March 2014}
+\maketitle
+
+
+%###############################################################################
+%###############################################################################
+\section{Concept}
+
+\begin{frame}[fragile, t]
+\frametitle{Definition of Back-Calculation}
+\cite{Francis1990} defined \emph{back-calculation} as,
+
+\vspace{18pt}
+\begin{quote}
+``... the dimensions of one or more marks in some hard part of the fish, together with its current body length, are used to estimate its length at the time of formation of each of the marks. ...''
+\end{quote}
+\end{frame}
+
+
+\begin{frame}[fragile, t]
+\frametitle{Mathematical Definitions}
+\begin{itemize}
+  \item<1-> $S_{C}$ -- Size (radius) of ageing structure at time of capture.
+  \item<2-> $S_{i}$ -- Size (radius) of ageing structure when $i$th annulus formed.
+\onslide<3>{
+  \begin{center}
+    \includegraphics[width=2.75in]{Figs/static-Scale_Measurements.png}
+  \end{center}
+}
+\vspace{-2.75in}
+  \item<4-> $L_{C}$ -- Size (length) of fish at time of capture.
+  \item<4-> \color<5>{red}{$L_{i}$ -- Size (length) of fish when $i$th annulus formed.}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile, t]
+\frametitle{Fundamental Principle}
+\begin{itemize}
+  \item<1-> Growth of structure is proportional to growth of fish.
+  \item<2-> Most simply, ratio of $S_{i}$ to $S_{C}$ is same as ratio of $L_{i}$ to $L_{C}$.
+  
+\[\Scale[1.5]{ \frac{S_{i}}{S_{C}} = \frac{L_{i}}{L_{C}} }\]
+
+  \vspace{18pt}
+  \item<3-> For example, if structure size at $i$ is 40\% of the structure size at capture than fish size at $i$ is 40\% of fish size at capture.
+  
+  \vspace{18pt}
+  \item<4-> Algebraically re-arrange to get simplest back-calculation model.
+  
+\[\Scale[1.5]{ L_{i} = \frac{S_{i}}{S_{C}}L_{C} }\]
+
+\end{itemize}
+\end{frame}
+
+
+%###############################################################################
+%###############################################################################
+\section{Common Methods}
+
+<<echo=FALSE>>=
+#### Set up a function to make the main plot to show back-calculations geometrically
+####   and add the individual fish.  This is only for demonstration in the notes.
+
+## Main plot
+bcGeomPlot <- function(d,xs,ys,fit=NULL) {
+  par(mar=c(3.5,3.5,1,1),mgp=c(2,0.5,0),las=1,tcl=-0.2,xaxs="i",yaxs="i")
+  ylbl <- expression(L[C]);   xlbl <- expression(S[C])
+  ylmt <- c(0,max(d$lencap)); xlmt <- c(0,max(d$radcap))
+  plot(lencap~radcap,data=d,pch=16,col=rgb(0,0,0,0.3),
+       xlim=xlmt,ylim=ylmt,xlab=xlbl,ylab=ylbl,yaxt="n",xaxt="n")
+  axis(2,ys); axis(1,xs)
+  if (!is.null(fit)) abline(fit)
+}
+
+## Add a fish
+bcGeomAddFish <- function(Sc,Si,Lc,Li,int,clr,xpos=0.25) {
+  # highlight the point
+  points(Sc,Lc,pch=16,col=clr,cex=1.25)
+  # Show the individual back-calculation line
+  lines(c(0,Sc),c(int,Lc),col=clr,lwd=2)
+  # Label Si on x-axis and Li on y-axis
+  axis(1,Si,round(Si,3),col.axis=clr,col.tick=clr,mgp=c(2,xpos,0))
+  axis(2,Li,round(Li,1),col.axis=clr,tick=FALSE,mgp=c(2,0.1,0))
+  # Draw a line up from scale radius over to the length axis
+  lines(c(Si,Si,0),c(0,Li,Li),col=clr,lwd=2,lty=2)
+}
+
+## Get info for fish #704
+fish704 <- Subset(wb90,fish==704)
+Sc4 <- fish704$radcap
+Lc4 <- fish704$lencap
+Si4 <- fish704$anu2
+
+## Get info for fish #701
+fish701 <- Subset(wb90,fish==701)
+Sc1 <- fish701$radcap
+Lc1 <- fish701$lencap
+Si1 <- fish701$anu3
+
+## Set up the back-calculation functions
+bcFL <- bcFuns(type="FRALE")
+@
+
+\begin{frame}[fragile, t]
+\frametitle{Fraser-Lee (Corrected Direct Proportion) Method}
+\begin{itemize}
+  \item<1-> Derived from ``structure grows in direct proportion to the fish length after an initial adjustment for $L$ when $S=0$.''
+
+\[\Scale[1.5]{ \frac{S_{i}}{S_{C}}=\frac{L_{i}-k}{L_{C}-k} }\]
+
+\vspace{12pt}
+  \item<2-> Algebraically re-arrange to get final model.
+
+\[\Scale[1.5]{ L_{i}=\frac{S_{i}}{S_{C}}(L_{C}-k)+k }\]
+
+\vspace{12pt}
+  \item<3-> $k$ from
+  \begin{itemize}
+    \item Known $L$ when structure forms.
+    \item Published values (e.g., \cite{Carlander1982}).
+    \item Intercept of $L$ on $S$ regression (i.e., $a$).
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile, t]
+\frametitle{Fraser-Lee (Corrected Direct Proportion) Method}
+\begin{itemize}
+  \item Geometrically, $L_{i}$ comes from a line between $(S_{C},L_{C})$ and $(0,k)$.
+  \begin{itemize}
+    \item In this example for Walleye, $k=55$ as from Carlander (1982).
+  \end{itemize}
+\end{itemize}
+\vspace{24pt}
+<<bcFraserLee1, echo=FALSE, fig.width=4.5, fig.height=4.5, out.width='.45\\linewidth'>>=
+## Use constant intercept of 55 from Carlander
+k <- 55
+## Set up the plot
+xs <- c(0,2,6,8,10)
+ys <- c(0,50,seq(200,350,50))
+bcGeomPlot(wb90,xs,ys,NULL)
+## Fish #704 as an example
+Li4 <- bcFL(Lc4,Si4,Sc4,k)
+bcGeomAddFish(Sc4,Si4,Lc4,Li4,k,"red")
+# Fish #701 as an example
+Li1 <- bcFL(Lc1,Si1,Sc1,k)
+bcGeomAddFish(Sc1,Si1,Lc1,Li1,k,"blue3",xpos=1)
+@
+\end{frame}
+
+
+%###############################################################################
+%###############################################################################
+\section*{References}
+\begin{frame}<beamer:0>
+% this is a hack for adding some references that did not work above for some reason
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{References}
+  \fontsize{7pt}{8.5}\selectfont
+  \bibliography{c:/aaaWork/zGnrlLatex/DHO_bib}    %make the bibliography
+\end{frame}
+
+
+\end{document}

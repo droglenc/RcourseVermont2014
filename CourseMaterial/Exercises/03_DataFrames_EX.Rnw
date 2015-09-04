@@ -1,0 +1,128 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Data Frames}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"asis","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Data Frames}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item Load the data in the \dfile{RuffeBio.xlsx} file into a data frame in R.
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/Exercises")
+ruf <- read.csv("Data/RuffeBio.csv")
+@
+  \item How many variables are in this data frame?  How many individuals/observations?
+<<echo=makekey, results=makekeyres>>=
+str(ruf)
+@  
+\ifmakekey
+  There are \Sexpr{ncol(ruf)} variables and \Sexpr{nrow(ruf)} individuals/observations in this data frame.
+\fi
+  \item Specifically, what is the name of the first variable
+\ifmakekey
+\\ The name of the first variable is \Sexpr{names(ruf)[1]}.
+\fi
+  \item Show all variables for the fifth individual.
+<<echo=makekey, results=makekeyres>>=
+ruf[5,]
+@
+  \item Show all variables for the fifth and seventh individuals.
+<<echo=makekey, results=makekeyres>>=
+ruf[c(5,7),]
+@
+  \item Show the total lengths for all individuals.
+<<echo=makekey, results=makekeyres>>=
+ruf$tl
+@
+  \item Show ONLY the total length for the seventeenth individual.
+<<echo=makekey, results=makekeyres>>=
+ruf$tl[17]
+@
+  \item Show ONLY the total length for the fifth and seventeenth individuals.
+<<echo=makekey, results=makekeyres>>=
+ruf$tl[c(15,17)]
+@
+  \item For each situation below, create a new data frame (from the original) and record how many fish are in that data frame.
+    \begin{enumerate}
+      \item Just female ruffe.
+<<echo=makekey, results=makekeyres>>=
+ruf1 <- Subset(ruf,sex=="female")
+nrow(ruf1)
+@
+      \item Just ruffe greater than 110 mm.
+<<echo=makekey, results=makekeyres>>=
+ruf2 <- Subset(ruf,tl>110)
+nrow(ruf2)
+@
+      \item Just ruffe between 80 and 110 mm.
+<<echo=makekey, results=makekeyres>>=
+ruf3 <- Subset(ruf,tl>80 & tl<110)
+nrow(ruf3)
+@
+      \item Excluding all fish of an ``unknown'' sex.
+<<echo=makekey, results=makekeyres>>=
+ruf5 <- Subset(ruf,sex!="unknown")
+nrow(ruf5)
+@
+    \end{enumerate}
+  \item Create new variables in the original data frame for the following situations.
+    \begin{enumerate}
+      \item Natural log of length and weight.
+<<echo=makekey, results=makekeyres>>=
+ruf$logtl <- log(ruf$tl)
+ruf$logw <- log(ruf$w)
+view(ruf)
+@ 
+      \item Length categories that are 10-mm wide.
+<<echo=makekey, results=makekeyres>>=
+Summarize(~tl,data=ruf)
+ruf <- lencat(~tl,data=ruf,startcat=40,w=10)
+view(ruf)
+@     
+      \item Fulton's condition factor (The weight of the fish divided by the cubed length of the fish multiplied by 10000).
+<<echo=makekey, results=makekeyres>>=
+ruf$fult <- ruf$wt/(ruf$tl^3)*10000
+view(ruf)
+@
+    \end{enumerate}
+  \vspace{12pt}
+  \item If you have time ...
+    \begin{enumerate}
+      \item Show the length frequency table by sex.
+<<echo=makekey, results=makekeyres>>=
+table(ruf$sex,ruf$LCat)
+@      
+      \item Create a length variable that is the total length in inches.
+<<echo=makekey, results=makekeyres>>=
+ruf$tlin <- ruf$tl/25.4
+@
+      \item Create a subset of just male ruffe with a total length less than 100 mm.
+<<echo=makekey, results=makekeyres>>=
+ruf4 <- Subset(ruf,sex=="male" & tl<100)
+nrow(ruf4)
+@
+      \item What is the \var{tl} for all but the 10th individual?
+<<echo=makekey, results=makekeyres>>=
+ruf$tl[-10]
+@
+      \item Show all recorded information for the 11th individual.
+<<echo=makekey, results=makekeyres>>=
+ruf[11,]
+@
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}

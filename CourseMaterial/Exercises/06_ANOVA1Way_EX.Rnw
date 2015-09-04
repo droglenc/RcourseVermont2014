@@ -1,0 +1,113 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - One-Way ANOVA}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+library(plotrix)
+library(multcomp)
+library(car)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"hold","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- One-Way ANOVA}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item Load the data in the \dfile{InchLake2.csv} file into a data frame in R.  Isolate the Bluegill data and then isolate the Bluegill data from 2007 (i.e., should result in two data frames -- Bluegills and Bluegills in 2007).  Note that length is inches and weight is in grams.
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/Exercises")
+IL <- read.csv("Data/InchLake2.csv")
+IL$lenmm <- IL$length*25.4
+bg <- Subset(IL,species=="Bluegill")
+bg07 <- Subset(bg,year==2007)
+bg07 <- Subset(bg07,complete.cases(bg07[,c("lenmm","weight")]))
+@
+  \item Construct relative weight and five-cell length class variables.
+<<echo=makekey, results=makekeyres>>=
+( wsBG <- wsVal("Bluegill") )
+( psdBG <- psdVal("Bluegill") )
+bg07 <- Subset(bg07,lenmm>=80)
+bg07 <- within(bg07,{
+  Ws <- 10^(wsBG$int)*lenmm^wsBG$slope
+  Wr <- weight/Ws*100
+})
+bg07 <- lencat(~lenmm,data=bg07,breaks=psdBG)
+view(bg07)
+@
+  \item Compute summary statistics of relative weight of Bluegill by five-cell length classes.
+<<echo=makekey, results=makekeyres>>=
+sumWr <- Summarize(Wr~LCat,data=bg07,digits=1)
+sumWr <- within(sumWr, {
+  LCI <- mean-1.96*sd/sqrt(n)
+  UCI <- mean+1.96*sd/sqrt(n)
+})
+sumWr
+@
+  \item Statistically determine if there is a difference in relative weight among length classes.  If so, which length classes differ? [\textit{For simplicity, ignore assumption violations at this point.}]
+<<AOV1ResidPlot1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+lm1 <- lm(Wr~LCat,data=bg07)
+residPlot(lm1)
+outlierTest(lm1)
+leveneTest(lm1)
+anova(lm1)
+mc1 <- glht(lm1,mcp(LCat="Tukey"))
+summary(mc1)
+cld(mc1)
+@
+  \item Construct a plot of mean relative weights with symbols that represent significant differences.
+<<AOV1FitPlot, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+with(sumWr,plotCI(1:3,mean,ui=UCI,li=LCI,pch=16,xlim=c(0.5,3.5),xaxt="n",
+                  ylim=c(70,100),xlab="Length Category",ylab="Mean Wr"))
+axis(1,1:3,c("Stock","Quality","Preferred"))
+abline(h=100,col="red",lty=3,lwd=2)
+text(1:3,sumWr$mean,c("a","a","b"),pos=c(4,4,4))
+text(1:3,70.5,paste("n=",sumWr$n,sep=""))
+@
+  \item \textit{If time permits ...} repeat the above analysis for Bluegills captured in 2008.
+<<echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+bg08 <- Subset(bg,year==2008)
+bg08 <- Subset(bg08,complete.cases(bg07[,c("lenmm","weight")]))
+bg08 <- Subset(bg08,lenmm>=80)
+bg08 <- within(bg08,{
+  Ws <- 10^(wsBG$int)*lenmm^wsBG$slope
+  Wr <- weight/Ws*100
+})
+bg08 <- lencat(~lenmm,data=bg08,breaks=psdBG)
+
+sumWr2 <- Summarize(Wr~LCat,data=bg08,digits=1)
+sumWr2 <- within(sumWr2, {
+  LCI <- mean-1.96*sd/sqrt(n)
+  UCI <- mean+1.96*sd/sqrt(n)
+})
+
+lm2 <- lm(Wr~LCat,data=bg08)
+outlierTest(lm2)
+leveneTest(lm2)
+anova(lm2)
+mc2 <- glht(lm2,mcp(LCat="Tukey"))
+summary(mc2)
+cld(mc2)
+@
+
+<<AOV1FitPlot2, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+with(sumWr2,plotCI(1:3,mean,ui=UCI,li=LCI,pch=16,xlim=c(0.5,3.5),xaxt="n",
+                  ylim=c(60,100),xlab="Length Category",ylab="Mean Wr"))
+axis(1,1:3,c("Stock","Quality","Preferred"))
+abline(h=100,col="red",lty=3,lwd=2)
+text(1:3,sumWr2$mean,c("a","b","b"),pos=c(4,4,4))
+text(1:3,60.5,paste("n=",sumWr2$n,sep=""))
+@
+
+
+\end{enumerate}
+
+\end{document}

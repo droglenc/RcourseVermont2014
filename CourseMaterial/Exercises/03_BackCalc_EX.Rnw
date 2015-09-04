@@ -1,0 +1,65 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Back-Calculation}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"asis","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Back-Calculation}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item Load the data in the \dfile{MN98WaeYep.csv} file into a data frame in R.
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/Exercises")
+mn <- read.csv("Data/MN98WaeYep.csv")
+str(mn)
+@
+  \item Isolate the Lake Shetek Walleye data.
+<<echo=makekey, results=makekeyres>>=
+df <- Subset(mn,species=="WAE" & lake=="Lake Shetek")
+str(df)
+@  
+  \item Is ``plus-growth'' recorded for your chosen data?  Explain.
+<<echo=makekey, results=makekeyres>>=
+head(df,n=3)
+tail(df,n=3)
+@
+\ifmakekey
+``Plus-growth'' is recorded because one more ``anu'' measurement appears in the data file then the assessed age.  For example, fish 155 was 1-year-old but two radial measurements were recorded and fish 1215 was 6-years-old but seven radial measurements were recorded.
+\fi
+  \item Reshape the data frame from ``wide'' to ``long'' format so that it will be suitable for adding a back-calculated total length variable.  Make sure to remove unneccesary ``NA''s and the ``plus-growth'', if it was recorded.
+<<echo=makekey, results=makekeyres>>=
+varying1 <- paste("rad",1:10,sep="")
+dfl <- reshape(df,direction="long",
+               idvar="fishID",       # what identifies unique fish
+               varying=varying1,     # declare the repeated measurements
+               v.names="rad",        # name for repeat meas in long format
+               timevar="age",        # name of var that identifies the repeat
+               times=1:10)           # values in timevar for repeat
+dfl <- Subset(dfl,!is.na(rad))       # remove all of the NAs
+dfl <- Subset(dfl,agecap-age>=0)     # remove the "plus" growth
+str(dfl)
+@
+  \item Add a variable that is the Fraser-Lee back-calculated total length if the ``correction factor'' is 55 mm.
+<<echo=makekey, results=makekeyres>>=
+k <- 55  # use Carlander intercept of k=55 mm
+dfl$bcFL <- (dfl$rad/dfl$radcap)*(dfl$lencap-k)+k
+@
+  \item Compute the mean length-at-back-calculated-age.
+<<echo=makekey, results=makekeyres, warning=makekey>>=
+Summarize(bcFL~age,data=dfl)
+@
+\end{enumerate}
+
+\end{document}

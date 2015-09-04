@@ -1,0 +1,99 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Age Bias and Precision}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"hold","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Age Bias and Precision}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+\item Herbst and Marsden (2012) (\href{http://www.uvm.edu/rsenr/emarsden/Herbst%20and%20Marsden%20whitefish%20age%20structure%20comparison.pdf}{reprint is here}) compared the precision, bias, and reader uncertainty of scales, dorsal fin rays, and otolith age estimates from 151 lake whitefish (\emph{Coregonus clupeaformis}) from Lake Champlain in 2009.  The data for their comparisons were recorded in \dfile{WhitefishLC.csv}.  This file contains inital age assessments for two readers on three structures (variable names are the structure name with a ``1'' or ``2'' appended to denote the reader).  In addition, the two readers developed a consensus age (variable name is the structure name with a ``C'' appended).  Load these data into R to answer the following questions.
+
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/Courses/MNAFS2013/CourseMaterial")
+wf <- read.csv("WhitefishLC.csv",header=TRUE)
+str(wf)
+@
+
+  \item Use a variety of methods (tabular, graphical, and statistical) to describe any apparent bias in \emph{consensus} ages between scales and otoliths.
+<<wfAC1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+ap1 <- agePrecision(~otolithC+scaleC,data=wf)
+summary(ap1,what="precision")
+summary(ap1,what="agreement")
+
+abOS <- ageBias(otolithC~scaleC,data=wf,col.lab="Otolith Age",row.lab="Scale Age")
+summary(abOS,what="symmetry",flip.table=TRUE)
+plot(abOS,xlim=c(0,25),ylim=c(0,25))
+@
+\ifmakekey
+The age-agreement table is significantly asymmetric (\Sexpr{swvPvalue(summary(abOS,what="symmetry")$p)}).  Otolith ages appear to be significantly greater than scale age from age 6 on, with the exception of age-7 and also noting that significance is difficult to determine for ages beyond age-13 because of small sample sizes.
+\fi   
+  
+  \item Describe any apparent bias in age assessment for otoliths between the two readers.
+<<wfac2, echo=makekey, results=makekeyres, fig.show=makekeyfig, warning=makekey>>=
+abO <- ageBias(otolith1~otolith2,data=wf,col.lab="Reader 1",row.lab="Reader 2")
+summary(abO,what="symmetry",flip.table=TRUE)
+summary(abO,what="bias")
+plot(abO)
+@
+\ifmakekey
+The age-agreement table appears to be symmetric (\Sexpr{swvPvalue(summary(abO,what="symmetry")$p)}) and there is no significant difference in assessed ages at any age between the two readers.  The ages are, on average, the same from the two readers.
+\fi
+  \item Describe precision of age assessment between the two readers for otoliths.
+<<echo=makekey, results=makekeyres>>=
+apO <- agePrecision(otolith1~otolith2,data=wf)
+summary(apO,what="precision")
+summary(apO,what="agreement")
+@  
+\ifmakekey
+The two readers agreed on age \Sexpr{formatC(apO$absdiff["0"]/apO$n*100,format="f",digits=1)}\% of the time and were within one year \Sexpr{formatC(sum(apO$absdiff[c("0","1")])/apO$n*100,format="f",digits=1)}\% of the time.  Using the criterion of Campana(2001), the age assessments from otoliths were precise (i.e., the CV=\Sexpr{formatC(apO$CV,format="f",digits=1)}$<$5.)
+\fi
+  \item (\emph{If time permits ...}) Describe any apparent bias in age assessment for scales between the two readers.
+<<wfac3, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+abS <- ageBias(scale1~scale2,data=wf,col.lab="Reader 1",row.lab="Reader 2")
+summary(abS,what="symmetry",flip.table=TRUE)
+summary(abS,what="bias")
+plot(abS,xlim=c(0,16),ylim=c(0,20))
+@
+\ifmakekey
+The age-agreement table appears to be symmetric (\Sexpr{swvPvalue(summary(abS,what="symmetry")$p)}) and there is no significant difference in assessed ages at any age between the two readers.  The ages are, on average, the same from the two readers.
+\fi
+  \item (\emph{If time permits ...}) Describe precision of age assessment between the two readers for scales.
+<<echo=makekey, results=makekeyres>>=
+apS <- agePrecision(scale1~scale2,data=wf)
+summary(apS,what="precision")
+summary(apS,what="agreement")
+@  
+\ifmakekey
+The two readers agreed on age \Sexpr{formatC(apS$absdiff["0"]/apS$n*100,format="f",digits=1)}\% of the time and were within two years \Sexpr{formatC(sum(apS$absdiff[c("0","1","2")])/apS$n*100,format="f",digits=1)}\% of the time.  Using the criterion of Campana(2001), the age assessments from otoliths were NOT precise (i.e., the CV=\Sexpr{formatC(apS$CV,format="f",digits=1)}$<$5.)
+\fi
+
+  \item (\emph{If time permits ...}) Use a variety of methods (tabular, graphical, and statistical) to describe any apparent bias in \emph{consensus} ages between fin rays and otoliths.
+<<wfAC4, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+ap2 <- agePrecision(~otolithC+finrayC,data=wf)
+summary(ap2,what="precision")
+summary(ap2,what="agreement")
+
+abOF <- ageBias(otolithC~finrayC,data=wf,col.lab="Otolith Age",row.lab="Fin Ray Age")
+summary(abOF,what="symmetry",flip.table=TRUE)
+plot(abOF,xlim=c(0,25),ylim=c(0,15))
+
+@
+\ifmakekey
+The age-agreement table is significantly asymmetric (\Sexpr{swvPvalue(summary(abOF,what="symmetry")$p)}).  Otolith ages appear to be significantly greater than fin ray age from age 7 on, but also noting that significance is difficult to determine for ages beyond age-14 because of small sample sizes.  Also, note that fin ray age for age-4 otoliths were significantly less than 4, indicating that the divergence in ages could begin as early as age-4.
+\fi   
+
+\end{enumerate}  
+\end{document}

@@ -1,0 +1,85 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont R - Simple Linear Regression}
+\newif\ifmakekey
+%\renewcommand{\theenumi}{\alph{enumi}}  % changes questions to letters
+
+\begin{document}
+<<setup, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+library(FSA)
+makekey <- FALSE     # change to TRUE to show answer key
+makekeyres <- ifelse(makekey,"markup","hide")
+makekeyfig <- ifelse(makekey,"hold","hide")
+@
+%\makekeytrue         % uncomment to show answer key
+
+\section*{Exercise -- Simple Linear Regression}
+Answer the following questions with R code by creating (\textit{and editing if you make a mistake}) an R script and iteratively running the code in RStudio.
+
+\begin{enumerate}
+  \item Load the data in the \dfile{LakeTroutALTER.csv} file into a data frame in R.
+<<echo=makekey, results=makekeyres>>=
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/Exercises")
+lkt <- read.csv("Data/LakeTroutALTER.csv")
+str(lkt)
+@
+  \vspace{12pt}
+  \item Fit the linear model betwween total length (dependent variable) and otolith radius.  Assess the appropriateness of this model.
+<<SLROtoResid1, echo=makekey, results=makekeyres, fig.show=makekeyfig, out.width='0.3\\linewidth'>>=
+lm1 <- lm(tl~otorad,data=lkt)
+residPlot(lm1)                # Left
+hist(~residuals(lm1))         # Middle
+fitPlot(lm1,ylab="Total Length (mm)",xlab="Otolith Radius (mm)",pch=16)  # Right
+@
+
+  \item Fit the linear model betwween total length (dependent variable) and the natural log of otolith radius.  Assess the appropriateness of this model.
+<<SLROtoResid2, echo=makekey, results=makekeyres, fig.show=makekeyfig, out.width='0.3\\linewidth'>>=
+lkt$logoto <- log(lkt$otorad)
+lm2 <- lm(tl~logoto,data=lkt)  
+residPlot(lm2)
+hist(~residuals(lm2))
+fitPlot(lm2)
+@
+
+  \item Answer the following questions with the total length and natural log of otolith radius model.
+  \begin{enumerate}  
+    \item Is the relationship between total length ans otolith radius significant?  How much variability in total length is explained by otolith radius?
+<<echo=makekey, results=makekeyres>>=
+summary(lm2)
+@
+\ifmakekey
+The relationship between total length and log otolith radious is statistically significant (\Sexpr{swvPvalue(summary(lm2)$coefficients[2,"Pr(>|t|)"])}) with \Sexpr{formatC(summary(lm2)$r.squared*100,format="f",digits=1)}\% of the variability in total length explained by log otolith radius.
+\fi
+    \item Predict the total length if the scale radius is 1.2 mm.
+<<echo=makekey, results=makekeyres>>=
+( p1.2 <- predict(lm2,data.frame(logoto=log(1.2)),interval="predict") )
+@
+\ifmakekey
+The predicted total length if the otolith radius is 1.2 mm is between \Sexpr{formatC(p1.2[1,"lwr"],format="f",digits=0)} and \Sexpr{formatC(p1.2[1,"upr"],format="f",digits=0)}, with a best guess of \Sexpr{formatC(p1.2[1,"fit"],format="f",digits=0)}.
+\fi
+    \item Construct a plot that illustrates the model with prediction intervals on the original scale.
+<<SLRFitPlot1, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+xs <- seq(0.7,1.8,0.01)
+pTL <- predict(lm2,data.frame(logoto=log(xs)),interval="prediction")
+plot(tl~otorad,data=lkt,pch=16,ylim=c(100,650),
+     ylab="Total Length (mm)",xlab="Otolith Radius (mm)")
+lines(pTL[,"fit"]~xs,col="red",lwd=2)
+lines(pTL[,"lwr"]~xs,col="red",lty=2)
+lines(pTL[,"upr"]~xs,col="red",lty=2)
+@
+  \end{enumerate}
+  \item \textit{If time permits ...} fit the length-weight regression for the Lake Trout data.
+<<SLRFitPlot2, echo=makekey, results=makekeyres, fig.show=makekeyfig>>=
+lkt <- within(lkt,{ 
+  logW <- log(w)
+  logTL <- log(tl)
+})
+lm3 <- lm(logW~logTL,data=lkt)
+summary(lm3)
+fitPlot(lm3)
+@  
+\end{enumerate}
+
+\end{document}

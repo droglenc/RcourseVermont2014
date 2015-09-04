@@ -1,0 +1,75 @@
+\documentclass{article}
+\input{c:/aaaWork/zGnrlLatex/GnrlPreamble}
+\input{c:/aaaWork/zGnrlLatex/justRPreamble}
+\hypersetup{pdftitle = Vermont 14 - Mark-Recapture}
+
+\begin{document}
+  \titleRHO{Mark-Recapture}{Vermont CFWRU Workshop}{Mar}
+
+<<setup, echo=FALSE>>=
+source("c:/aaaWork/zGnrlLatex/knitr_setup.R")
+fn <- "11_MarkRecap"
+@
+
+\section*{Preliminaries}
+<<results='hide', message=FALSE, warning=FALSE>>=
+library(FSA)  # for mrClosed(), capHistSum()
+setwd("C:/aaaWork/Web/fishR/courses/Vermont2014/CourseMaterial/") # Derek's Computer
+@
+
+\section*{Single Census, Closed Population}
+<<>>=
+bg <- read.csv("Data/BluegillJL.csv",header=TRUE)
+view(bg)
+bgtbl <- xtabs(~first+second,data=bg)
+addmargins(bgtbl)
+mr1 <- mrClosed(M=196,n=90,m=9,type="Chapman")
+summary(mr1)
+confint(mr1)
+@
+<<>>=
+bgch <- capHistSum(bg)
+bgch$caphist
+mr2 <- mrClosed(bgch,type="Chapman")
+summary(mr2)
+@
+
+\newpage
+\section*{Single Census, Closed Population, Size Classes}
+The following table appeared in the grey literature article ``A mark recapture experiment to estimate the escapement of chinook salmon in the Keta River, 2000''.
+
+\includegraphics[width=3in]{Figs/Table1.png}
+
+<<>>=
+mr3 <- mrClosed(M=c(70,200),n=c(52,172),m=c(9,37),type="Chapman",
+                labels=c("550-659 mm",">=660 mm"))
+summary(mr3,incl.SE=TRUE,incl.all=TRUE)
+confint(mr3)
+@
+
+
+\newpage
+\section*{Multiple Census, Closed Population, Capture History Data}
+<<>>=
+np <- read.csv("Data/PikeNYPartial1.csv",header=TRUE)
+view(np)
+npch <- capHistSum(np,cols=-1)
+npch$caphist
+npch$sum
+mr4 <- mrClosed(npch,type="Schnabel")
+summary(mr4)
+confint(mr4)
+@
+
+\section*{Multiple Census, Closed Population, Summarized Data}
+<<>>=
+mr5 <- mrClosed(n=c(16,19,16),m=c(0,7,7),R=c(16,19,0),type="Schnabel")
+summary(mr5)
+confint(mr5)
+@
+
+<<echo=FALSE, results='hide', message=FALSE, error=FALSE>>=
+swvCode(fn,out.dir="Scripts",moreItems=c("source","fn"))
+@
+
+\end{document}

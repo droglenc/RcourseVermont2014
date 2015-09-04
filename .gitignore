@@ -2,12 +2,23 @@
 .Rhistory
 .Rapp.history
 
-# Example code in package build process
-*-Ex.R
+# administrative files
+Admin/
 
-# RStudio files
-.Rproj.user/
+# Intermediate files
+CoursePrep/*.log
+CoursePrep/*.synctex.gz
+CoursePrep/*.tex
+CourseMaterial/*.log
+CourseMaterial/*.synctex.gz
+CourseMaterial/*.tex
+CourseMaterial/Exercises/*.log
+CourseMaterial/Exercises/*.synctex.gz
+CourseMaterial/Exercises/*.
+CourseMaterial/Exercises/Figs/
+CourseMaterial/Figs/
+CourseMaterial/Slides/cache/
+CourseMaterial/Slides/Figs/
 
 # produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+.Rproj.user
